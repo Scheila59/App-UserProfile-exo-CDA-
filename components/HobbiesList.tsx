@@ -1,25 +1,29 @@
-import Colors from "../constants/Colors";
 import { AntDesign } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  Button,
-  FlatList,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import Colors from "../constants/Colors";
 
 export default function HobbiesList({
   hobbies,
   onAddHobbies,
   onRemoveHobbies,
-}: any) {
+}: {
+  hobbies: string[];
+  onAddHobbies: (hobby: string) => void;
+  onRemoveHobbies: (hobby: string) => void;
+}) {
   const [newHobbies, setNewHobbies] = useState("");
 
   const handleAdd = () => {
     if (newHobbies) {
+      Keyboard.dismiss();
       onAddHobbies(newHobbies);
       setNewHobbies("");
     }
@@ -34,25 +38,21 @@ export default function HobbiesList({
           placeholder="Ajouter un hobby..."
           value={newHobbies}
           onChangeText={setNewHobbies}
+          onSubmitEditing={handleAdd}
+          returnKeyType="done"
         />
-        <Button title="Ajouter" onPress={handleAdd} color={Colors.light.tint} />
+        <Pressable onPress={handleAdd}>
+          <Text style={styles.addButton}>Ajouter</Text>
+        </Pressable>
       </View>
-      <FlatList
-        data={hobbies}
-        renderItem={({ item }) => (
-          <View style={styles.hobbyItem}>
-            <Text>{item}</Text>
-            <Pressable onPress={() => onRemoveHobbies(item)}>
-              <AntDesign
-                name="closecircle"
-                size={18}
-                color={Colors.light.tint}
-              />
-            </Pressable>
-          </View>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-      />
+      {hobbies.map((item, index) => (
+        <View key={index.toString()} style={styles.hobbyItem}>
+          <Text>{item}</Text>
+          <Pressable onPress={() => onRemoveHobbies(item)}>
+            <AntDesign name="closecircle" size={18} color={Colors.light.tint} />
+          </Pressable>
+        </View>
+      ))}
     </View>
   );
 }
@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   input: {
@@ -81,6 +82,12 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 5,
     marginRight: 10,
+  },
+  addButton: {
+    backgroundColor: Colors.light.secondary,
+    padding: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
   },
   hobbyItem: {
     flexDirection: "row",

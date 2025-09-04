@@ -1,5 +1,5 @@
 import Colors from "@/constants/Colors";
-import { useState } from "react";
+import { SetStateAction, useState } from "react";
 import { Button, ScrollView, StyleSheet } from "react-native";
 import EditForm from "../../components/EditForm";
 import ExperienceCounter from "../../components/ExperienceCounter";
@@ -20,7 +20,17 @@ export default function ProfileScreen() {
 
   const [isEdit, setIsEdit] = useState(false);
 
-  const handleEdit = (updateUser) => {
+  const handleEdit = (
+    updateUser: SetStateAction<{
+      name: string;
+      surname: string;
+      age: number;
+      email: string;
+      picture: string;
+      experience: number;
+      hobbies: string[];
+    }>
+  ) => {
     setUser({
       ...user,
       ...updateUser,
@@ -39,7 +49,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <ProfileCard user={user} />
       <ExperienceCounter
         experience={user.experience}
@@ -70,9 +83,12 @@ export default function ProfileScreen() {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  contentContainer: {
     padding: 16,
   },
 });
