@@ -11,7 +11,8 @@ const path = require("path");
 const readline = require("readline");
 
 const root = process.cwd();
-const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
+// Do NOT include "scripts" here to avoid moving this running script (causes EPERM on Windows)
+const oldDirs = ["app", "components", "hooks", "constants"];
 const exampleDir = "app-example";
 const newAppDir = "app";
 const exampleDirPath = path.join(root, exampleDir);
@@ -59,8 +60,28 @@ const moveDirectories = async (userInput) => {
       if (fs.existsSync(oldDirPath)) {
         if (userInput === "y") {
           const newDirPath = path.join(root, exampleDir, dir);
-          await fs.promises.rename(oldDirPath, newDirPath);
-          console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
+          try {
+            // Try a fast rename first
+            await fs.promises.rename(oldDirPath, newDirPath);
+            console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
+          } catch (err) {
+            // Fallback for Windows EPERM/EACCES or cross-device EXDEV: copy then delete
+            if (["EPERM", "EACCES", "EXDEV"].includes(err.code)) {
+              await fs.promises.mkdir(path.dirname(newDirPath), {
+                recursive: true,
+              });
+              await fs.promises.cp(oldDirPath, newDirPath, { recursive: true });
+              await fs.promises.rm(oldDirPath, {
+                recursive: true,
+                force: true,
+              });
+              console.log(
+                `➡️ /${dir} copied to /${exampleDir}/${dir} and source deleted.`
+              );
+            } else {
+              throw err;
+            }
+          }
         } else {
           await fs.promises.rm(oldDirPath, { recursive: true, force: true });
           console.log(`❌ /${dir} deleted.`);
